@@ -34,27 +34,68 @@ text_input = st.text_area(
     help="The text will be converted to speech using Google's Text-to-Speech service"
 )
 
-# Language selection
-language_option = st.selectbox(
-    "Select language:",
-    options=[
-        "English (UK)", 
-        "English (US)", 
-        "French", 
-        "German", 
-        "Spanish"
-    ],
-    index=0
-)
+# Create two columns for language settings
+col1, col2 = st.columns(2)
 
-# Map language options to gTTS language codes
-language_mapping = {
-    "English (UK)": "en-uk",
-    "English (US)": "en-us",
-    "French": "fr",
-    "German": "de",
-    "Spanish": "es"
-}
+# Column 1: Language selection
+with col1:
+    st.subheader("Input Language")
+    st.markdown("Select the language of your input text:")
+    
+    language_option = st.selectbox(
+        "Text Language:",
+        options=[
+            "English", 
+            "French", 
+            "German", 
+            "Spanish",
+            "Italian",
+            "Portuguese"
+        ],
+        index=0,
+        help="Select the language that your text is written in"
+    )
+
+# Column 2: Accent/Dialect selection (only shown for English)
+with col2:
+    st.subheader("Voice Accent")
+    
+    if language_option == "English":
+        accent_option = st.selectbox(
+            "English Accent:",
+            options=[
+                "British (UK)",
+                "American (US)",
+                "Australian",
+                "Indian",
+                "Irish"
+            ],
+            index=0,
+            help="Select the accent for the generated speech"
+        )
+        
+        # Map accent options to gTTS language codes
+        accent_mapping = {
+            "British (UK)": "en-gb",
+            "American (US)": "en-us",
+            "Australian": "en-au",
+            "Indian": "en-in",
+            "Irish": "en-ie"
+        }
+        selected_lang_code = accent_mapping[accent_option]
+    else:
+        # Map language options to gTTS language codes
+        language_mapping = {
+            "English": "en",
+            "French": "fr",
+            "German": "de",
+            "Spanish": "es",
+            "Italian": "it",
+            "Portuguese": "pt"
+        }
+        selected_lang_code = language_mapping[language_option]
+        
+        st.info(f"Your text will be read with a native {language_option} voice.")
 
 # Speed/rate slider
 speech_speed = st.slider(
@@ -63,7 +104,7 @@ speech_speed = st.slider(
     max_value=1.5,
     value=1.0,
     step=0.1,
-    help="Adjust the speed of the generated speech (may not work with all voices)"
+    help="Adjust the speed of the generated speech (only slow/normal options available with Google TTS)"
 )
 
 # Button to generate MP3
@@ -76,8 +117,7 @@ if st.button("Generate Audio"):
                     temp_filename = tmp_file.name
                 
                 # Convert text to speech
-                selected_lang = language_mapping[language_option]
-                tts = gTTS(text=text_input, lang=selected_lang, slow=(speech_speed < 1.0))
+                tts = gTTS(text=text_input, lang=selected_lang_code, slow=(speech_speed < 1.0))
                 tts.save(temp_filename)
                 
                 # Success message
@@ -104,5 +144,7 @@ st.markdown("---")
 st.markdown("""
 ### About this tool
 This tool uses Google's Text-to-Speech (gTTS) service to convert text to speech.
-An internet connection is required for this tool to work properly.
+- You must enter text in the **same language** you select
+- For English text, you can choose different accents
+- An internet connection is required for this tool to work
 """) 
